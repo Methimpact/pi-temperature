@@ -1,0 +1,358 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Chez Wigner</title>
+
+<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js" ></script> -->
+
+<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
+<script language="javascript" type="text/javascript" src="flot/moment.min.js"></script>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+
+
+<style type="text/css">
+
+	#placeholder .button {
+		position: absolute;
+		cursor: pointer;
+	}
+
+	#placeholder div.button {
+		font-size: smaller;
+		color: #999;
+		background-color: #eee;
+		padding: 2px;
+	}
+	.message {
+		padding-left: 50px;
+		font-size: smaller;
+	}
+
+
+	body {background-color:#fff; color:#333;} 
+	h4 {font-family: sans-serif; color:#555555; font-size:16px;}
+	h3 {font-family: sans-serif; color:#222; text-align:left;}
+	p {font-family: sans-serif; color:#333; font-size:12px;text-align:left;}
+		#caption {position:absolute; width:1000px; text-align:center; top:500px; z-index:1}
+  	a {font-family: sans-serif; color:#d15423; text-decoration:none;}
+
+	div {}
+		#container {width:1300px;}
+
+                #leftmenu  {width:250px; float:left; margin-top:-10px; margin-left:5px; margin-right:5px;}
+                #rightmenu {width:0px; float:left; margin-left:10px;text-align:center;}
+                #tools p{font-family: sans-serif; color:#ccc; font-size:12px;text-align:center;}
+                #actionscreen {width:800px; float:left;margin-top:20px; margin-bottom:10px;}
+                #footer {width:1300px;color:#ccc;}
+                #footer p{font-family: sans-serif; font-size:10px;text-align:center;clear:both !important;}
+                #buttonWrapper {
+                   float: left;
+               
+                 }
+              
+                input[type =
+                  "button"] {
+                 padding: 5px;
+                 width: 120px;
+                 height: 35px;
+                 margin: 0px 0px 0px 0px;
+                 }
+       input[type="range"]:first-of-type {
+  width: 200px;
+
+</style>
+
+
+<script>
+
+
+
+$(function() {
+
+        var flotData = [];
+        var flotDatab = [];
+
+        var tempData = [];
+        var tempData2 = [];
+
+        var tempDatab = [];
+        var tempData2b = [];
+
+        var cardRules = new Array();
+        var minx = 99999999999999999999999;
+        var maxx = 0;
+        var ymin = 9999999999.0;
+        var ymax = -999999.0;
+        var oldmin=0;
+        ymin=ymin-5.0;
+        ymax=ymax+5.0;
+        var options;
+        var str;
+        var vflag=true;
+        var vymin, vymax;
+        var datescaleleft=0;
+        var datescaleright=100;
+
+function getdata() {  
+      
+
+  $.get('temperature.dat', function(data){
+
+        flotData = [];
+        flotDatab = [];
+
+        tempData = [];
+        tempData2 = [];
+
+        tempDatab = [];
+        tempData2b = [];
+
+        cardRules = [];
+        minx = 99999999999999999999999;
+        maxx = 0;
+        ymin = 9999999999.0;
+        ymax = -999999.0;
+        ldmin=0;
+        cardRules = data.split('\n');
+        for(i=(cardRules.length -2);i>=0; i--){
+          tempData = cardRules[i].split(/\s+/g);
+
+
+           var temptemp = parseFloat(tempData[0]);
+          var temptempina = parseFloat(tempData[4]);
+          var temptemp2 = temptemp.toFixed(1);
+          var temptempin = temptempina.toFixed(1);
+
+	  strtop = "Most recent readings: Outside: "+temptemp2+" F; Inside: "+temptempin+" F, both at time: "+tempData[1]+" "+tempData[2]+" From IP: "+tempData[3];
+
+
+          document.getElementById('top').innerHTML ="<p>"+strtop+"</p><p>Data from last 6+ hours (Blue: Inside; Yellow: Outside):</p>";
+
+          var temptempb= parseFloat(tempData[4]);
+          var temptemp2b = temptempb.toFixed(1);
+
+
+          var myDate=tempData[1]+" "+tempData[2];
+          var newDate=(moment(myDate).unix())*1000;
+	
+          if(temptemp>ymax && temptemp!=0){ymax=temptemp;}
+	  if(temptemp<ymin && temptemp!=0){ymin=temptemp;}
+          if(temptempb>ymax && temptempb!=0){ymax=temptempb;}
+	  if(temptempb<ymin && temptempb!=0){ymin=temptempb;}
+         
+          if(newDate>maxx){maxx=newDate;}
+	  if(newDate<minx){minx=newDate;}
+
+          tempData2=[newDate,tempData[0]];
+          tempData2b=[newDate,tempData[4]];
+
+          flotData.push(tempData2);
+	  flotDatab.push(tempData2b);
+	  
+      }     
+    
+            
+         ymin=ymin-5.0;
+         ymax=ymax+5.0;
+
+         if(vflag)
+         {
+           vymin = ymin.toFixed(0);
+           vymax = ymax.toFixed(0);
+           vflag=false;
+           console.log(vflag);
+         }
+   
+         minx = minx + (datescaleleft/100)*(maxx-minx);
+         maxx = minx + (datescaleright/100)*(maxx-minx);
+
+     });
+
+
+
+options = {
+        grid: {
+				hoverable: true,
+				clickable: true
+			},
+
+
+        xaxis: {
+		                       
+			mode: "time",
+                       timeformat: "%H:%M",
+                       ticksize: [2, "hour"],
+                        min: minx,
+		        max: maxx,
+         		timezone: "browser"
+	        },
+        yaxis: {
+		       min: vymin,
+		       max: vymax,
+                },
+                      zoom: {
+			interactive: true
+			},
+			pan: {
+			interactive: true
+			}
+       };
+
+}
+
+ 
+
+ 
+   
+getdata();
+
+
+
+$.plot("#placeholder", [flotData,flotDatab],options);
+
+
+function stuff(){
+
+$("<div id='tooltip'></div>").css({
+			position: "absolute",
+			display: "none",
+			border: "1px solid #fdd",
+			padding: "2px",
+			"background-color": "#fee",
+			opacity: 0.80
+		}).appendTo("body");
+
+$("#placeholder").bind("plothover", function (event, pos, item) {
+
+
+			if ($("#enableTooltip:checked").length > 0) {
+				if (item) {
+					var x = item.datapoint[0].toFixed(2),
+					y = item.datapoint[1].toFixed(2);
+                                        var showdate =new Date(Math.floor(x));
+	                                var hours = showdate.getHours();
+                                        var minutes = showdate.getMinutes();
+                                        var formattedTime = hours + ':' + minutes; // + ':' + seconds;
+					$("#tooltip").html("time= " + formattedTime + " , temp = " + y + " F")
+						.css({top: item.pageY+5, left: item.pageX+5})
+						.fadeIn(200);
+				} else {
+					$("#tooltip").hide();
+				}
+			}
+		});
+
+		$("#placeholder").bind("plotclick", function (event, pos, item) {
+			if (item) {
+				$("#clickdata").text(" - click point " + item.dataIndex + " in " + item.series.label);
+		                  }
+		});
+
+ 
+$(function() {
+    $( "#slider-range1" ).slider({
+      range: true,
+      min: 0,
+      max: 100,
+      values: [ datescaleleft,datescaleright ],
+      slide: function( event, ui ) {
+        $( "#amount1" ).val( ui.values[ 0 ] + " % - " + ui.values[ 1 ] + "%" );
+	datescaleleft=ui.values[0];
+        datescaleright=ui.values[1];
+      }
+    });
+    $( "#amount1" ).val($( "#slider-range1" ).slider( "values", 0 ) +
+      "% - " + $( "#slider-range1" ).slider( "values", 1 )+ "%") ;
+  });
+
+
+ $(function() {
+    
+    $( "#slider-range2" ).slider({
+      range: true,
+      min: Math.round(ymin)-20,
+      max: Math.round(ymax)+20,
+      values: [vymin, vymax ],
+      slide: function( event, ui ) {
+        $( "#amount2" ).val( "" + ui.values[ 0 ].toFixed(0) + " F - " + ui.values[ 1 ].toFixed(0) + " F" );
+        vymin = ui.values[0];
+        vymax = ui.values[1];
+      }
+    });
+    $( "#amount2" ).val( $( "#slider-range2" ).slider( "values", 0 ) +
+      "F - " + $( "#slider-range2" ).slider( "values", 1 ) + "F" );
+  });
+
+}
+
+         stuff();
+
+          function update() {
+
+                        getdata();
+                        stuff();                       
+                        $.plot("#placeholder", [flotData,flotDatab],options);
+	                stuff();
+			setTimeout(update, 500);
+
+		}
+
+	update();
+});
+
+
+
+</script>
+</head>
+<body>
+
+<div id="container"> 
+
+     <div id="leftmenu">
+<br>
+<h1>Wigner</h1>
+
+
+<p>
+
+<h3> <label for="amount1">Date Range:</label></h3>
+<input type="text" id="amount1" style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+<div id="slider-range1" style="position:relative; width:200px; height:20px; border:1px solid #0ccccc;"></div>
+
+<h3> <label for="amount2">Temp Range:</label></h3>
+<input type="text" id="amount2" style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+<div id="slider-range2" style="position:relative; width:200px; height:20px; border:1px solid #0ccccc;"></div>
+
+</p>
+<br>
+
+
+
+ <span id="hoverdata"></span>
+ <span id="clickdata"></span>
+
+
+
+<p><label><input id="enableTooltip" type="checkbox" checked="checked"></input>Show on hover?</label></p>
+
+<p>Note, this graph automatically updates.</p>
+</div>
+
+
+<div id="actionscreen">   
+<div id="top"></div>
+
+
+<div id="placeholder" class="demo-placeholder" style="width:600px;height:330px"></div>
+</div>
+
+</div>
+</body>
+</html>
