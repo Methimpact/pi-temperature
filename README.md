@@ -24,3 +24,9 @@ chmod +x protemp.py
 Currently this program *does not* generate a file from scratch, you will need to give it a starter file, and so I've included temperature.dat for that purpose--after about six hours the data in that file will have all been overwritten by your data.
 
 Finally, index.html is the html file that does the heavy lifting in terms of presenting the data. It uses the jquery and flot libraries to create a smooth and dynamic presentation of the data. This should be placed in your web-servers web root. It updates automatically (and smoothly, not with a page refresh but by redrawing the graph and updating the data).
+
+You will need to download the open-source library flot and add this to the web root directory as well:
+
+http://www.flotcharts.org/
+
+Save this as "flot" to match index.html, or as what you prefer and modify index.html to point to the right folder.
